@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 const Homepage = ({ chats = [], folders = [], users = [] }) => {
     const location = useLocation();
     const isSelectChat = location.state?.selectChat;
+    const path = location.state?.path;
+    const folderID = location.state?.folderID;
     const [selectedChats, setSelectedChats] = useState([]);
     const [userMap, setUserMap] = useState({});// State for chats
 
@@ -26,6 +28,19 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
         });
     };
 
+    const formatTimeWithAMPM = (timestamp) => {
+        const date = new Date(timestamp);
+        let hours = date.getHours();
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+
+        // Convert 24-hour time to 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12; // '0' should be '12'
+
+        return `${hours}:${minutes} ${ampm}`;
+    };
+
     if (!chats || !folders) {
         return <div>Loading...</div>; // Loading state sementara data di-fetch
     }
@@ -45,7 +60,6 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
             ) : (
                 <div className="flex justify-between items-center p-4">
                     <div className="flex flex-col items-start">
-                        <i className="fa-duotone fa-solid fa-circle-ellipsis text-black-500 text-2xl" style={{ faSecondaryColor: '#d6d6d6' }} />
                         <h1 className="text-2xl font-bold">
                             Chats
                         </h1>
@@ -75,7 +89,7 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
                 Archived
             </div>
             {/* Chat List */}
-            <div className="space-y-4">
+            <div className="space-y-4 ">
                 {chats.map((chat) => {
                     const user = userMap[chat.user_id];
                     return (
@@ -85,11 +99,11 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
                                     <input
                                         className="form-checkbox h-5 w-5 text-gray-600"
                                         type="checkbox"
-                                        checked={selectedChats.includes(chat)}
+                                        checked={selectedChats.some(c => c.id === chat.id)}
                                         onChange={() => handleCheckboxChange(chat)}
                                     />
                                 )}
-                                <div key={chat.id} className="flex justify-between items-center w-full px-4">
+                                <Link to={`chat/${chat.id}`} key={chat.id} className="flex justify-between items-center w-full px-4">
                                     <div className="flex items-center space-x-4">
                                         {/* Display User Avatar */}
                                         <img
@@ -109,10 +123,10 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
                                     {/* Display Time */}
                                     <div className="text-right">
                                         <div className="text-gray-500 text-sm">
-                                            {new Date(chat.created_at).toLocaleTimeString()}
+                                            {chat?.updated_at?.Valid ? formatTimeWithAMPM(chat?.updated_at?.Time) : formatTimeWithAMPM(chat?.created_at)}
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             </div>
                         )
                     );
@@ -127,9 +141,15 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
                     <button className="text-gray-700">
                         Read
                     </button>
-                    <Link className="text-gray-700" to="/chat-folders/add" state={{ data: selectedChats }}>
-                        Add To Folder
-                    </Link>
+                    {path == "add-folder" ? (
+                        <Link className="text-gray-700" to="/chat-folders/add" state={{ data: selectedChats }}>
+                            Add To Folder
+                        </Link>
+                    ) : (
+                        <Link className="text-gray-700" to={`/chat-folders/edit/${folderID}`} state={{ data: selectedChats }}>
+                            Add To Folder
+                        </Link>
+                    )}
                     <button className="text-gray-700">
                         Delete
                     </button>
@@ -138,46 +158,30 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
                 <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
                     <div className="flex justify-around p-2">
                         <div className="flex flex-col items-center">
-                            <i className="fas fa-circle-notch text-gray-500">
-                            </i>
-                            <span className="text-xs text-gray-500">
-                                Updates
-                            </span>
+                            <i className="fas fa-circle-notch text-gray-500"></i>
+                            <span className="text-xs text-gray-500">Updates</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <i className="fas fa-phone-alt text-gray-500">
-                            </i>
-                            <span className="text-xs text-gray-500">
-                                Calls
-                            </span>
+                            <i className="fas fa-phone-alt text-gray-500"></i>
+                            <span className="text-xs text-gray-500">Calls</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <i className="fas fa-users text-gray-500">
-                            </i>
-                            <span className="text-xs text-gray-500">
-                                Communities
-                            </span>
+                            <i className="fas fa-users text-gray-500"></i>
+                            <span className="text-xs text-gray-500">Communities</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <i className="fas fa-comments text-green-500">
-                            </i>
-                            <span className="text-xs text-green-500">
-                                Chats
-                            </span>
+                            <i className="fas fa-comments text-green-500"></i>
+                            <span className="text-xs text-green-500">Chats</span>
                         </div>
                         <Link to="/settings">
                             <div className="flex flex-col items-center">
-                                <i className="fas fa-cog text-gray-500">
-                                </i>
-                                <span className="text-xs text-gray-500">
-                                    Settings
-                                </span>
+                                <i className="fas fa-cog text-gray-500"></i>
+                                <span className="text-xs text-gray-500">Settings</span>
                             </div>
                         </Link>
                     </div>
                 </div>
-            )
-            }
+            )}
         </div >
     );
 }

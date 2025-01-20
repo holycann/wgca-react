@@ -2,9 +2,11 @@ import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } 
 import { useState, useEffect } from "react";
 import { getData } from "./utils/Api"
 import Homepage from "./pages/Homepage"
+import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import Folders from './pages/Folders';
 import AddFolder from './pages/AddFolder';
+import EditFolder from './pages/EditFolder';
 import './App.css'
 
 function App() {
@@ -46,10 +48,12 @@ function App() {
           createRoutesFromElements(
             <Route path="/">
               <Route index element={<Homepage chats={chats} folders={folders} users={users} />} />
+              <Route path="chat/:id" element={<Chat />} />
               <Route path="settings" element={<Settings />} />
               <Route path="chat-folders"  >
                 <Route index element={<Folders folders={folders} chats={chats} />} />
                 <Route path="add" element={<AddFolder />} />
+                <Route path="edit/:id" element={<EditFolder users={users} />} />
               </Route>
             </Route>
           )
