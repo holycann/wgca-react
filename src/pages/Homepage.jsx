@@ -67,7 +67,8 @@ const Homepage = ({ chats = [], folders = [], users = [] }) => {
                     <div className="flex space-x-4 items-center">
                         <i className="fas fa-camera text-gray-500">
                         </i>
-                        <div className="w-4 h-4 bg-green-500 rounded-full">
+                        <div className="flex justify-center items-center w-4 h-4 bg-green-500 rounded-full p-3">
+                            <i className="fa-solid fa-plus text-xs text-black-500"></i>
                         </div>
                     </div>
                 </div>
