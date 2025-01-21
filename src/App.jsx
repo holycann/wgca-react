@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { getData } from "./utils/Api"
 import Homepage from "./pages/Homepage"
 import Chat from './pages/Chat';
+import AddChat from './pages/AddChat';
+import NewChat from './pages/NewChat';
 import Settings from './pages/Settings';
 import Folders from './pages/Folders';
 import AddFolder from './pages/AddFolder';
@@ -50,6 +52,10 @@ function App() {
               <Route index element={<Homepage chats={chats} folders={folders} users={users} />} />
               <Route path="chat/:id" element={<Chat />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="new-chat"  >
+                <Route index element={<AddChat />} />
+                <Route path=":id" element={<NewChat />} />
+              </Route>
               <Route path="chat-folders"  >
                 <Route index element={<Folders folders={folders} chats={chats} />} />
                 <Route path="add" element={<AddFolder />} />

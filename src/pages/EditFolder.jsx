@@ -2,6 +2,9 @@
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getData, updateData } from "../utils/Api";
 import { useState, useEffect, useMemo } from "react";
+import { ToastConfirm, ToastError } from "../utils/Toast";
+import { ToastContainer } from "react-toastify";
+import folderImage from "../assets/folder.png"
 
 const EditFolder = ({ users }) => {
     const location = useLocation();
@@ -65,7 +68,7 @@ const EditFolder = ({ users }) => {
             const response = await updateData(id, "/folder", data);
             return response?.id;
         } catch (error) {
-            console.error(error);
+            ToastError(String(error));
         }
     };
 
@@ -74,7 +77,7 @@ const EditFolder = ({ users }) => {
         try {
             await updateData(chatData?.id, "/chat", data);
         } catch (error) {
-            console.error(error);
+            ToastError(String(error));
         }
     };
 
@@ -85,6 +88,11 @@ const EditFolder = ({ users }) => {
 
     const submitData = async () => {
         try {
+            if (!folderName) {
+                ToastError("Folder Name Cannot Be Empty !!!")
+                return
+            }
+
             let folderID = await submitFolder();
 
             if (folderID > 0 && chats.length) {
@@ -93,7 +101,7 @@ const EditFolder = ({ users }) => {
 
             navigate("/chat-folders");
         } catch (error) {
-            console.error('Error submitting data:', error);
+            ToastError('Error submitting data:' + String(error));
         }
     };
 
@@ -111,7 +119,7 @@ const EditFolder = ({ users }) => {
 
             {/* Content */}
             <div className="flex flex-col items-center px-4 py-6">
-                <img alt="Folder icon" className="mb-4" src="https://placehold.co/100x100" />
+                <img alt="Folder icon" className="mb-4" src={folderImage} />
                 <p className="text-center text-gray-600 mb-4">
                     Choose chats and types of chats that will appear in this folder.
                 </p>
@@ -137,7 +145,7 @@ const EditFolder = ({ users }) => {
                                 <span>{user.name}</span>
                             </div>
                             <button
-                                onClick={() => { removeChat(user?.id) }}
+                                onClick={() => { ToastConfirm(user?.id, removeChat) }}
                                 aria-label={`Delete chat ${user.name}`}
                                 className="text-red-500 hover:text-red-700"
                             >
@@ -147,6 +155,7 @@ const EditFolder = ({ users }) => {
                     ))}
                 </div>
             </div>
+            <ToastContainer />
         </div >
     );
 };

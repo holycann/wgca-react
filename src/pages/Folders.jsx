@@ -1,14 +1,22 @@
 import { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { deleteData } from "../utils/Api";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { deleteData, updateData } from "../utils/Api";
+import { ToastContainer } from 'react-toastify';
+import { ToastConfirm, ToastError } from "../utils/Toast";
+import folderImage from "../assets/folder.png"
 
 // eslint-disable-next-line react/prop-types
 const Folders = ({ folders = [], chats = [] }) => {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const isSelectChat = location.state?.select
+    const selectedChat = location.state?.data
     const [chatCounts, setChatCounts] = useState({}); // State to store chat counts per folder
+
 
     // Calculate chat counts based on folder ID
     useEffect(() => {
-        const counts = chats.reduce((map, chat) => {
+        const counts = chats?.reduce((map, chat) => {
             const folderId = chat.folder_id?.Int16; // Ensure safe access
             if (folderId) {
                 map[folderId] = (map[folderId] || 0) + 1; // Count chats in folder
@@ -23,18 +31,37 @@ const Folders = ({ folders = [], chats = [] }) => {
         if (!folderID) return;
 
         try {
-            const response = await deleteData(folderID, "/folder");
-            console.log("Folder deleted successfully:", response);
+            await deleteData(folderID, "/folder");
         } catch (error) {
-            console.error("Error deleting folder:", error.message);
-            alert("Failed to delete folder. Please try again.");
+            ToastError(String(error))
+        }
+    }, []);
+
+    const addChat = useCallback(async (folderID) => {
+        if (selectedChat) {
+            try {
+                for (const chat of selectedChat) {
+                    const chatWithoutDates = Object.keys(chat)
+                        .filter(key => !['updated_at', 'created_at'].includes(key))
+                        .reduce((obj, key) => {
+                            obj[key] = chat[key];
+                            return obj;
+                        }, {});
+                    const data = { ...chatWithoutDates, folder_id: folderID }
+                    console.log(JSON.stringify(data, null, 2));
+
+                    await updateData(chat.id, "/chat", data);
+
+                    navigate('/', { state: { folderID: folderID } })
+                }
+            } catch (error) {
+                ToastError(String(error))
+            }
         }
     }, []);
 
     // Render loading state if no folders available
-    if (!folders.length) {
-        return <div>Loading folders...</div>;
-    }
+    // if (!folders?.length) return <div>Loading Fetch Folders....</div>
 
     return (
         <div className="max-w-md mx-auto p-4">
@@ -51,7 +78,7 @@ const Folders = ({ folders = [], chats = [] }) => {
                 <img
                     alt="Folder icon"
                     className="w-24 h-24"
-                    src="https://placehold.co/100x100"
+                    src={folderImage}
                 />
             </div>
 
@@ -75,39 +102,52 @@ const Folders = ({ folders = [], chats = [] }) => {
             <div className="bg-gray-100 p-4 rounded-lg">
                 <h2 className="text-green-500 font-semibold mb-2">Folders</h2>
                 <ul>
-                    {folders.map((folder) => (
-                        <li key={folder.id} className="flex justify-between mb-2 items-center">
-                            <div className="flex flex-col">
-                                <span className="font-medium">{folder.name}</span>
-                                <span className="text-gray-500 text-sm">
-                                    {chatCounts[folder.id] || 0} chats
-                                </span>
-                            </div>
-                            <div className="flex space-x-2">
-                                {/* Edit Folder */}
-                                <Link
-                                    to={`edit/${folder.id}`}
-                                    state={{
-                                        folderData: folder,
-                                        folderChats: chats.filter(chat => chat.folder_id?.Int16 === folder.id),
-                                    }}
-                                    aria-label={`Edit folder ${folder.name}`}
-                                >
-                                    <i className="fas fa-pen text-green-500 hover:text-green-700 cursor-pointer" />
-                                </Link>
-                                {/* Delete Folder */}
-                                <button
-                                    onClick={() => handleDeleteFolder(folder.id)}
-                                    aria-label={`Delete folder ${folder.name}`}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    <i className="fas fa-trash" />
-                                </button>
+                    {folders?.map((folder) => (
+                        <li key={folder?.id}>
+                            <div
+                                role={isSelectChat ? "button" : "div"}
+                                className="flex justify-between mb-2 items-center"
+                                onClick={isSelectChat ? () => { addChat(folder.id) } : undefined}
+                            >
+                                <div className="flex flex-col">
+                                    <span className="font-medium">{folder.name}</span>
+                                    {chatCounts && chatCounts[folder?.id] !== undefined ? (
+                                        <span className="text-gray-500 text-sm">
+                                            {chatCounts[folder?.id]} chats
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-500 text-sm">
+                                            0 chats
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex space-x-2">
+                                    {/* Edit Folder */}
+                                    <Link
+                                        to={`edit/${folder.id}`}
+                                        state={{
+                                            folderData: folder,
+                                            folderChats: chats?.filter(chat => chat?.folder_id?.Int16 === folder?.id),
+                                        }}
+                                        aria-label={`Edit folder ${folder.name}`}
+                                    >
+                                        <i className="fas fa-pen text-green-500 hover:text-green-700 cursor-pointer" />
+                                    </Link>
+                                    {/* Delete Folder */}
+                                    <button
+                                        onClick={() => ToastConfirm(folder.id, handleDeleteFolder)}
+                                        aria-label={`Delete folder ${folder.name}`}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                        <i className="fas fa-trash" />
+                                    </button>
+                                </div>
                             </div>
                         </li>
                     ))}
                 </ul>
             </div>
+            <ToastContainer />
         </div>
     );
 };

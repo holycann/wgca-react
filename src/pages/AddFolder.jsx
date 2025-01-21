@@ -1,6 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { getData, postData, updateData } from "../utils/Api";
 import { useState, useEffect } from "react";
+import { ToastError, ToastSuccess } from "../utils/Toast";
+import { ToastContainer } from "react-toastify"
+import folderImage from "../assets/folder.png"
 
 const AddFolder = () => {
     const location = useLocation();
@@ -36,10 +39,9 @@ const AddFolder = () => {
         }
         try {
             const response = await postData(data, "/folder")
-            console.log(response)
             return response.id
         } catch (error) {
-            console.error(error)
+            ToastError(String(error))
         }
     }
 
@@ -53,16 +55,21 @@ const AddFolder = () => {
 
         try {
             const response = await updateData(chat.id, "/chat", data)
-            return response
+            ToastSuccess(String(response))
         } catch (error) {
-            console.error(error)
+            ToastError(String(error))
         }
     }
 
     const submitData = async () => {
-        if (folderName != "") {
-            const folderID = await submitFolder()
-            if (folderID > 0 && selectedChatsData && selectedChatsData.length > 0) {
+        if (!folderName) {
+            ToastError("Folder Name Cannot Empty !!!")
+            return;
+        }
+
+        const folderID = await submitFolder()
+        if (folderID > 0) {
+            if (selectedChatsData && selectedChatsData.length > 0) {
                 for (const chat of selectedChatsData) {
                     await updateChatFolder(folderID, chat)
                 }
@@ -70,6 +77,7 @@ const AddFolder = () => {
 
             window.location.href = "/chat-folders"
         }
+
     }
 
 
@@ -89,14 +97,14 @@ const AddFolder = () => {
                         Add Folder
                     </span>
                 </div>
-                <div className="flex items-center" onClick={submitData}>
+                <button className="flex items-center" onClick={submitData}>
                     <i className="fas fa-check text-green-500">
                     </i>
-                </div>
+                </button>
             </div>
             {/* Content */}
             <div className="flex flex-col items-center px-4 py-6">
-                <img alt="Folder icon" className="mb-4" src="https://placehold.co/100x100" />
+                <img alt="Folder icon" className="mb-4" src={folderImage} />
                 <p className="text-center text-gray-600 mb-4">
                     Choose chats and types of chats that will appear and never appear in this folder.
                 </p>
@@ -127,6 +135,16 @@ const AddFolder = () => {
                     Choose chats or types of chats that will appear in this folder.
                 </p>
             </div>
+            <ToastContainer
+                position="top-center"
+                autoClose={false}
+                newestOnTop
+                closeOnClick={false}
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                theme="light"
+            />
         </div>
     );
 };
